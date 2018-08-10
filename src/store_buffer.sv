@@ -79,7 +79,7 @@ module store_buffer (
     // Speculative Queue - Core Interface
     // ----------------------------------------
     always_comb begin : core_if
-        automatic logic [DEPTH_SPEC:0] speculative_status_cnt;
+        automatic logic [$clog2(DEPTH_SPEC):0] speculative_status_cnt;
         speculative_status_cnt = speculative_status_cnt_q;
 
         // we are ready if the speculative and the commit queue have a space left
@@ -143,7 +143,7 @@ module store_buffer (
     assign req_port_o.data_we  = 1'b1; // we will always write in the store queue
 
     always_comb begin : store_if
-        automatic logic [DEPTH_COMMIT:0] commit_status_cnt;
+        automatic logic [$clog2(DEPTH_COMMIT):0] commit_status_cnt;
         commit_status_cnt = commit_status_cnt_q;
 
         commit_ready_o = (commit_status_cnt_q < DEPTH_COMMIT);
