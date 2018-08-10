@@ -79,11 +79,11 @@ module store_buffer (
     // Speculative Queue - Core Interface
     // ----------------------------------------
     always_comb begin : core_if
-        automatic logic [DEPTH_SPEC:0] speculative_status_cnt;
+        automatic logic [$clog2(DEPTH_SPEC):0] speculative_status_cnt;
         speculative_status_cnt = speculative_status_cnt_q;
 
         // we are ready if the speculative and the commit queue have a space left
-        ready_o = (speculative_status_cnt_q < (DEPTH_SPEC - 1)) || commit_i;
+        ready_o = (int'(speculative_status_cnt_q) < (DEPTH_SPEC - 1)) || commit_i;
         // default assignments
         speculative_status_cnt_n    = speculative_status_cnt_q;
         speculative_read_pointer_n  = speculative_read_pointer_q;
@@ -143,10 +143,10 @@ module store_buffer (
     assign req_port_o.data_we  = 1'b1; // we will always write in the store queue
 
     always_comb begin : store_if
-        automatic logic [DEPTH_COMMIT:0] commit_status_cnt;
+        automatic logic [$clog2(DEPTH_COMMIT):0] commit_status_cnt;
         commit_status_cnt = commit_status_cnt_q;
 
-        commit_ready_o = (commit_status_cnt_q < DEPTH_COMMIT);
+        commit_ready_o = (int'(commit_status_cnt_q) < DEPTH_COMMIT);
         // no store is pending if we don't have any element in the commit queue e.g.: it is empty
         no_st_pending_o         = (commit_status_cnt_q == 0);
         // default assignments
