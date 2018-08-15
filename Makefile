@@ -201,6 +201,12 @@ $(addsuffix -verilator,$(riscv-benchmarks)): verilate
 run-benchmarks-verilator: $(addsuffix -verilator,$(riscv-benchmarks))
 
 
+lint:
+	$(verilator) --lint-only $(ariane_pkg) $(filter-out src/ariane_regfile.sv, $(wildcard src/*.sv)) $(wildcard src/axi_slice/*.sv) \
+	src/util/cluster_clock_gating.sv src/util/behav_sram.sv src/axi_mem_if/src/axi2mem.sv tb/agents/axi_if/axi_if.sv \
+	--unroll-count 256 -Wno-fatal -LDFLAGS "-L/opt/riscv/lib -lfesvr" -CFLAGS "-std=c++11" -Wall -Wno-DECLFILENAME --cc --trace \
+	$(list_incdir) --top-module ariane_wrapped --exe tb/ariane_tb.cpp tb/simmem.cpp
+
 verify:
 	qverify vlog -sv src/csr_regfile.sv
 
