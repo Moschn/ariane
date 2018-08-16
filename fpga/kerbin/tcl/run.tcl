@@ -15,12 +15,10 @@ source ../common/messages.tcl
 # source tcl/ips_src_files.tcl
 # source tcl/rtl_src_files.tcl
 
-add_files -v -norecurse -scan_for_includes ../rtl
+# add_files -v -norecurse -scan_for_includes ../rtl
 add_files -v -scan_for_includes ../../src
 add_files -v -scan_for_includes ../../include
 
-# special file from tb for AXI_BUS
-add_files -norecurse { ../../tb/agents/axi_if/axi_if.sv }
 
 # add IPs
 # source tcl/ips_add_files.tcl
