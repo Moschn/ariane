@@ -17,6 +17,8 @@
 import std_cache_pkg::*;
 
 
+import nbdcache_pkg::*;
+
 module axi_adapter #(
         parameter int unsigned DATA_WIDTH          = 256,
         parameter logic        CRITICAL_WORD_FIRST = 0, // the AXI subsystem needs to support wrapping reads for this feature
