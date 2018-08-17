@@ -5,16 +5,17 @@ import argparse
 import os.path
 import sys
 
-parser = argparse.ArgumentParser(description='Convert binary file to verilog rom')
+parser = argparse.ArgumentParser(
+    description='Convert binary file to verilog rom')
 parser.add_argument('filename', metavar='filename', nargs=1,
-                   help='filename of input binary')
+                    help='filename of input binary')
 
 args = parser.parse_args()
-file = args.filename[0];
+file = args.filename[0]
 
 # check that file exists
 if not os.path.isfile(file):
-    print("File {} does not exist.".format(filename))
+    print("File {} does not exist.".format(file))
     sys.exit(1)
 
 filename = os.path.splitext(file)[0]
@@ -66,7 +67,7 @@ endmodule
 rom = []
 
 with open(filename + ".img", "rb") as f:
-    byte = True;
+    byte = True
     while byte:
         word = ""
         # read 64-bit a.k.a 8 byte
@@ -98,7 +99,7 @@ with open(filename + ".sv", "w") as f:
     i = 0
     for r in rom:
         i += 1
-        rom_str += r + ",\n        ";
+        rom_str += r + ",\n        "
 
     rom_str.rstrip()
     # strip the last whitespace
