@@ -1,9 +1,11 @@
-PROJECT:=xilinx_dcache_bank_tag_256x46
+PROJECT:=kerbin
 
 all:
 	vivado -mode batch -source tcl/run.tcl
 gui:
 	vivado -mode gui -source tcl/run.tcl &
+interactive:
+	vivado -mode tcl -source tcl/run.tcl
 
 clean:
 	rm -rf ${PROJECT}.*

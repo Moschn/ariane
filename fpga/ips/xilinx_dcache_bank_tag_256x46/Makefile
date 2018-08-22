@@ -7,7 +7,7 @@ all:
 	cp ${PROJECT}.runs/${PROJECT}_synth_1/${PROJECT}.dcp ip/.
 
 gui:
-	vivado-2017.2 vivado -mode gui -source tcl/run.tcl &
+	vivado -mode gui -source tcl/run.tcl &
 
 clean:
 	rm -rf ip/*
