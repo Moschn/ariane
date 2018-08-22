@@ -4,6 +4,9 @@ set_property board_part $::env(XILINX_BOARD) [current_project]
 
 debug::set_visibility 10
 
+# # set number of threads to 8 (maximum, unfortunately)
+set_param general.maxThreads 8
+
 # set up includes
 # source tcl/ips_inc_dirs.tcl
 set_property include_dirs { ../../include } [current_fileset]
@@ -15,10 +18,9 @@ source ../common/messages.tcl
 # source tcl/ips_src_files.tcl
 # source tcl/rtl_src_files.tcl
 
-# add_files -v -norecurse -scan_for_includes ../rtl
-add_files -v -scan_for_includes ../../src
-add_files -v -scan_for_includes ../../include
-
+add_files -norecurse -scan_for_includes ../../include
+add_files -norecurse -scan_for_includes ../rtl
+add_files -scan_for_includes ../../src
 
 # add IPs
 # source tcl/ips_add_files.tcl
@@ -28,8 +30,8 @@ add_files -v -scan_for_includes ../../include
 read_ip ../ips/xilinx_dcache_bank_data_256x128/ip/xilinx_dcache_bank_data_256x128.xci
 read_ip ../ips/xilinx_dcache_bank_tag_256x46/ip/xilinx_dcache_bank_tag_256x46.xci
 # read_ip ../ips/xilinx_l2_mem_4096x64/ip/xilinx_l2_mem_4096x64.xci
-# read_ip ../ips/xilinx_mig7_ddr3/ip/xilinx_mig7_ddr3.xci
-# read_ip ../ips/xilinx_clock_manager/ip/xilinx_clock_manager.xci
+read_ip ../ips/xilinx_mig7_ddr3/ip/xilinx_mig7_ddr3.xci
+read_ip ../ips/xilinx_clock_manager/ip/xilinx_clock_manager.xci
 
 # synth_ip [get_ips xilinx_dcache_bank_data_256x128]
 # synth_ip [get_ips xilinx_dcache_bank_tag_256x46]
@@ -39,15 +41,15 @@ read_ip ../ips/xilinx_dcache_bank_tag_256x46/ip/xilinx_dcache_bank_tag_256x46.xc
 
 # set kerbin as top
 # set_property top kerbin [current_fileset]
-set_property top ariane [current_fileset]
+set_property top kerbin [current_fileset]
 
 # needed only if used in batch mode
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
 
 # add constraints (timing and cdc)
-# add_files -fileset constrs_1 -norecurse tcl/constraints.xdc
-# set_property target_constrs_file tcl/constraints.xdc [current_fileset -constrset]
+add_files -fileset constrs_1 -norecurse tcl/zyboz7.xdc
+set_property target_constrs_file tcl/zyboz7.xdc [current_fileset -constrset]
 
 catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL }
 update_compile_order -fileset sources_1
@@ -70,15 +72,13 @@ exec rm -rf reports/*
 check_timing                                                            -file reports/kerbin.check_timing.rpt
 report_timing -max_paths 100 -nworst 100 -delay_type max -sort_by slack -file reports/kerbin.timing_WORST_100.rpt
 report_timing -nworst 1 -delay_type max -sort_by group                  -file reports/kerbin.timing.rpt
-report_utilization -hierarchical                                        -file reports/kerbin.utilization.rpt
+report_utilization -hierarchical                                        -file reports/kerbin.utilization_hierarchical.rpt
+report_utilization                                                      -file reports/kerbin.utilization_total.rpt
 report_cdc                                                              -file reports/kerbin.cdc.rpt
 report_clock_interaction                                                -file reports/kerbin.clock_interaction.rpt
 
 # physical constraints
 # source tcl/kerbin_io.xdc
-
-# # set number of threads to 8 (maximum, unfortunately)
-set_param general.maxThreads 8
 
 # set for RuntimeOptimized implementation
 # set_property "steps.opt_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
