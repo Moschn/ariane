@@ -18,16 +18,18 @@ import kerbin_pkg::*;
 module kerbin (
     // System Ports
     input  logic               sys_clk_i,
-    output logic               ddr3_ref_clk_p,
-    output logic               ddr3_ref_clk_n,
     input  logic               sys_rst,
-    output logic               ddr3_sys_clk_p,
-    output logic               ddr3_sys_clk_n,
     // DDR 3
-    inout  logic [63:0]        ddr3_dq,
-    inout  logic [7:0]         ddr3_dqs_n,
-    inout  logic [7:0]         ddr3_dqs_p,
-    output logic [13:0]        ddr3_addr,
+    input  logic               ddr3_ref_clk_p,
+    input  logic               ddr3_ref_clk_n,
+    input  logic               ddr3_sys_clk_p,
+    input  logic               ddr3_sys_clk_n,
+    input  logic               ddr_areset_n,
+
+    inout  logic [15:0]        ddr3_dq,
+    inout  logic [1:0]         ddr3_dqs_n,
+    inout  logic [1:0]         ddr3_dqs_p,
+    output logic [12:0]        ddr3_addr,
     output logic [2:0]         ddr3_ba,
     output logic               ddr3_ras_n,
     output logic               ddr3_cas_n,
@@ -37,48 +39,31 @@ module kerbin (
     output logic               ddr3_ck_n,
     output logic               ddr3_cke,
     output logic               ddr3_cs_n,
-    output logic [7:0]         ddr3_dm,
+    output logic [1:0]         ddr3_dm,
     output logic               ddr3_odt
 );
-    logic  test_en_i, rst_ni, rst_no;
+    logic  test_en_i, rst_ni;
     logic  ui_clk_sync_rst;
     logic  clk_i;
     logic  ui_clk;
-    logic  clk, ddr3_clk;
+    logic  clk;
 
     assign test_en_i = 1'b0;
     assign rst_ni = ~ui_clk_sync_rst;
     assign clk_i = clk;
-    assign ui_clock = clk;
 
     // -------------
     // Clk Manager
     // -------------
     xilinx_clock_manager i_xilinx_clock_manager(
         // Clock out ports
-        .clk_out1_ce ( 1'b1            ), // input clk_out1_ce
         .clk_out1    ( clk             ), // output clk_out1
-        .clk_out2_ce ( 1'b1            ), // input clk_out2_ce
-        .clk_out2    ( ddr3_clk        ), // output clk_out2
         // Status and control signals
         .reset       ( ui_clk_sync_rst ), // input reset
         .locked      (                 ), // output locked
         // Clock in ports
-        .clk_in1     ( sys_clk_i       )  // input clk_in1
+        .clk_in1     ( ui_clk          )  // input clk_in1
     );
-
-    // generate the differential clocks for the DDR3 interface
-    OBUFDS gen_ddr3_sys_i(
-        .O  ( ddr3_sys_clk_p ), // output diff_p
-        .OB ( ddr3_sys_clk_n ), // output diff_n
-        .I  ( ddr3_clk   )  // input clock
-    );
-    OBUFDS gen_ddr3_ref_i(
-        .O  ( ddr3_ref_clk_p ), // output diff_p
-        .OB ( ddr3_ref_clk_n ), // output diff_n
-        .I  ( sys_clk_i )  // input clock
-    );
-
 
     AXI_BUS #(
         .AXI_ADDR_WIDTH   ( K_AXI_ADDRESS_WIDTH  ),
@@ -93,6 +78,28 @@ module kerbin (
         .AXI_ID_WIDTH     ( K_AXI_MASTER_ID_WIDTH ),
         .AXI_USER_WIDTH   ( K_AXI_USER_WIDTH      )
     ) masters[NR_MASTERS_SOC-1:0]();
+
+    AXI_BUS #(
+        .AXI_ADDR_WIDTH   ( K_AXI_ADDRESS_WIDTH   ),
+        .AXI_DATA_WIDTH   ( K_AXI_DATA_WIDTH      ),
+        .AXI_ID_WIDTH     ( K_AXI_SLAVE_ID_WIDTH  ),
+        .AXI_USER_WIDTH   ( K_AXI_USER_WIDTH      )
+    ) axi_ddr3_i();
+
+    // ------------------------------------------------------
+    // AXI Slices to ease timing path to DDR3
+    // ------------------------------------------------------
+    axi_slice_wrap #(
+        .AXI_ADDR_WIDTH ( K_AXI_ADDRESS_WIDTH   ),
+        .AXI_DATA_WIDTH ( K_AXI_DATA_WIDTH      ),
+        .AXI_USER_WIDTH ( K_AXI_USER_WIDTH      ),
+        .AXI_ID_WIDTH   ( K_AXI_MASTER_ID_WIDTH ),
+        .SLICE_DEPTH    ( 2                     )
+    ) i_axi_ddr3_slice ( 
+        .axi_slave  ( slaves[0]  ), 
+        .axi_master ( axi_ddr3_i ), 
+        .*
+    );
 
     // -------------
     // AXI interconnect
@@ -125,16 +132,14 @@ module kerbin (
         .boot_addr_i  ( K_BOOT_ADDR ),
         .core_id_i    (             ),
         .cluster_id_i (             ),
-        .instr_if     ( slaves[0].Master  ),
-        .data_if      ( slaves[1].Master  ),
-        .bypass_if    ( slaves[2].Master  ),
+        .instr_if     ( masters[0]  ),
+        .data_if      ( masters[1]  ),
+        .bypass_if    ( masters[2]  ),
         .irq_i        (             ),
         .ipi_i        (             ),
         .time_irq_i   (             ),
         .debug_req_i  (             )
     );
-
-    //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 
     xilinx_mig7_ddr3 u_xilinx_mig7_ddr3 (
 
@@ -160,7 +165,7 @@ module kerbin (
         .ui_clk                ( ui_clk              ),  // output			ui_clk
         .ui_clk_sync_rst       ( ui_clk_sync_rst     ),  // output			ui_clk_sync_rst
         .mmcm_locked           (                     ),  // output			mmcm_locked
-        .aresetn               ( rst_no              ),  // input			aresetn
+        .aresetn               ( ddr_areset_n        ),  // input			aresetn
         .app_sr_req            ( 1'b0                ),  // input			app_sr_req
         .app_ref_req           ( 1'b0                ),  // input			app_ref_req
         .app_zq_req            ( 1'b0                ),  // input			app_zq_req
@@ -168,47 +173,47 @@ module kerbin (
         .app_ref_ack           (                     ),  // output			app_ref_ack
         .app_zq_ack            (                     ),  // output			app_zq_ack
         // Slave Interface Write Address Ports
-        .s_axi_awid            ( masters[1].aw_id          ),  // input [3:0]		s_axi_awid
-        .s_axi_awaddr          ( masters[1].aw_addr        ),  // input [26:0]	s_axi_awaddr
-        .s_axi_awlen           ( masters[1].aw_len         ),  // input [7:0]		s_axi_awlen
-        .s_axi_awsize          ( masters[1].aw_size        ),  // input [2:0]		s_axi_awsize
-        .s_axi_awburst         ( masters[1].aw_burst       ),  // input [1:0]		s_axi_awburst
-        .s_axi_awlock          ( masters[1].aw_lock        ),  // input [0:0]		s_axi_awlock
-        .s_axi_awcache         ( masters[1].aw_cache       ),  // input [3:0]		s_axi_awcache
-        .s_axi_awprot          ( masters[1].aw_prot        ),  // input [2:0]		s_axi_awprot
-        .s_axi_awqos           ( masters[1].aw_qos         ),  // input [3:0]		s_axi_awqos
-        .s_axi_awvalid         ( masters[1].aw_valid       ),  // input			s_axi_awvalid
-        .s_axi_awready         ( masters[1].aw_ready       ),  // output			s_axi_awready
+        .s_axi_awid            ( axi_ddr3_i.aw_id          ),  // input [3:0]		s_axi_awid
+        .s_axi_awaddr          ( axi_ddr3_i.aw_addr        ),  // input [26:0]	s_axi_awaddr
+        .s_axi_awlen           ( axi_ddr3_i.aw_len         ),  // input [7:0]		s_axi_awlen
+        .s_axi_awsize          ( axi_ddr3_i.aw_size        ),  // input [2:0]		s_axi_awsize
+        .s_axi_awburst         ( axi_ddr3_i.aw_burst       ),  // input [1:0]		s_axi_awburst
+        .s_axi_awlock          ( axi_ddr3_i.aw_lock        ),  // input [0:0]		s_axi_awlock
+        .s_axi_awcache         ( axi_ddr3_i.aw_cache       ),  // input [3:0]		s_axi_awcache
+        .s_axi_awprot          ( axi_ddr3_i.aw_prot        ),  // input [2:0]		s_axi_awprot
+        .s_axi_awqos           ( axi_ddr3_i.aw_qos         ),  // input [3:0]		s_axi_awqos
+        .s_axi_awvalid         ( axi_ddr3_i.aw_valid       ),  // input			s_axi_awvalid
+        .s_axi_awready         ( axi_ddr3_i.aw_ready       ),  // output			s_axi_awready
         // Slave Interface Write Data Ports
-        .s_axi_wdata           ( masters[1].w_data         ),  // input [63:0]	s_axi_wdata
-        .s_axi_wstrb           ( masters[1].w_strb         ),  // input [7:0]		s_axi_wstrb
-        .s_axi_wlast           ( masters[1].w_last         ),  // input			s_axi_wlast
-        .s_axi_wvalid          ( masters[1].w_valid        ),  // input			s_axi_wvalid
-        .s_axi_wready          ( masters[1].w_ready        ),  // output			s_axi_wready
+        .s_axi_wdata           ( axi_ddr3_i.w_data         ),  // input [63:0]	s_axi_wdata
+        .s_axi_wstrb           ( axi_ddr3_i.w_strb         ),  // input [7:0]		s_axi_wstrb
+        .s_axi_wlast           ( axi_ddr3_i.w_last         ),  // input			s_axi_wlast
+        .s_axi_wvalid          ( axi_ddr3_i.w_valid        ),  // input			s_axi_wvalid
+        .s_axi_wready          ( axi_ddr3_i.w_ready        ),  // output			s_axi_wready
         // Slave Interface Write Response Ports
-        .s_axi_bid             ( masters[1].b_id           ),  // output [3:0]	s_axi_bid
-        .s_axi_bresp           ( masters[1].b_resp         ),  // output [1:0]	s_axi_bresp
-        .s_axi_bvalid          ( masters[1].b_valid        ),  // output			s_axi_bvalid
-        .s_axi_bready          ( masters[1].b_ready        ),  // input			s_axi_bready
+        .s_axi_bid             ( axi_ddr3_i.b_id           ),  // output [3:0]	s_axi_bid
+        .s_axi_bresp           ( axi_ddr3_i.b_resp         ),  // output [1:0]	s_axi_bresp
+        .s_axi_bvalid          ( axi_ddr3_i.b_valid        ),  // output			s_axi_bvalid
+        .s_axi_bready          ( axi_ddr3_i.b_ready        ),  // input			s_axi_bready
         // Slave Interface Read Address Ports
-        .s_axi_arid            ( masters[1].ar_id          ),  // input [3:0]		s_axi_arid
-        .s_axi_araddr          ( masters[1].ar_addr        ),  // input [26:0]	s_axi_araddr
-        .s_axi_arlen           ( masters[1].ar_len         ),  // input [7:0]		s_axi_arlen
-        .s_axi_arsize          ( masters[1].ar_size        ),  // input [2:0]		s_axi_arsize
-        .s_axi_arburst         ( masters[1].ar_burst       ),  // input [1:0]		s_axi_arburst
-        .s_axi_arlock          ( masters[1].ar_lock        ),  // input [0:0]		s_axi_arlock
-        .s_axi_arcache         ( masters[1].ar_cache       ),  // input [3:0]		s_axi_arcache
-        .s_axi_arprot          ( masters[1].ar_prot        ),  // input [2:0]		s_axi_arprot
-        .s_axi_arqos           ( masters[1].ar_qos         ),  // input [3:0]		s_axi_arqos
-        .s_axi_arvalid         ( masters[1].ar_valid       ),  // input			s_axi_arvalid
-        .s_axi_arready         ( masters[1].ar_ready       ),  // output			s_axi_arready
+        .s_axi_arid            ( axi_ddr3_i.ar_id          ),  // input [3:0]		s_axi_arid
+        .s_axi_araddr          ( axi_ddr3_i.ar_addr        ),  // input [26:0]	s_axi_araddr
+        .s_axi_arlen           ( axi_ddr3_i.ar_len         ),  // input [7:0]		s_axi_arlen
+        .s_axi_arsize          ( axi_ddr3_i.ar_size        ),  // input [2:0]		s_axi_arsize
+        .s_axi_arburst         ( axi_ddr3_i.ar_burst       ),  // input [1:0]		s_axi_arburst
+        .s_axi_arlock          ( axi_ddr3_i.ar_lock        ),  // input [0:0]		s_axi_arlock
+        .s_axi_arcache         ( axi_ddr3_i.ar_cache       ),  // input [3:0]		s_axi_arcache
+        .s_axi_arprot          ( axi_ddr3_i.ar_prot        ),  // input [2:0]		s_axi_arprot
+        .s_axi_arqos           ( axi_ddr3_i.ar_qos         ),  // input [3:0]		s_axi_arqos
+        .s_axi_arvalid         ( axi_ddr3_i.ar_valid       ),  // input			s_axi_arvalid
+        .s_axi_arready         ( axi_ddr3_i.ar_ready       ),  // output			s_axi_arready
         // Slave Interface Read Data Ports
-        .s_axi_rid             ( masters[1].r_id           ),  // output [3:0]	s_axi_rid
-        .s_axi_rdata           ( masters[1].r_data         ),  // output [63:0]	s_axi_rdata
-        .s_axi_rresp           ( masters[1].r_resp         ),  // output [1:0]	s_axi_rresp
-        .s_axi_rlast           ( masters[1].r_last         ),  // output			s_axi_rlast
-        .s_axi_rvalid          ( masters[1].r_valid        ),  // output			s_axi_rvalid
-        .s_axi_rready          ( masters[1].r_ready        ),  // input			s_axi_rready
+        .s_axi_rid             ( axi_ddr3_i.r_id           ),  // output [3:0]	s_axi_rid
+        .s_axi_rdata           ( axi_ddr3_i.r_data         ),  // output [63:0]	s_axi_rdata
+        .s_axi_rresp           ( axi_ddr3_i.r_resp         ),  // output [1:0]	s_axi_rresp
+        .s_axi_rlast           ( axi_ddr3_i.r_last         ),  // output			s_axi_rlast
+        .s_axi_rvalid          ( axi_ddr3_i.r_valid        ),  // output			s_axi_rvalid
+        .s_axi_rready          ( axi_ddr3_i.r_ready        ),  // input			s_axi_rready
         // System Clock Ports
         .sys_clk_p             ( ddr3_sys_clk_p            ),  // input			sys_clk_p
         .sys_clk_n             ( ddr3_sys_clk_n            ),  // input			sys_clk_n
@@ -218,4 +223,6 @@ module kerbin (
         .sys_rst               ( sys_rst                   )   // input sys_rst
     );
     
+    
+
 endmodule
