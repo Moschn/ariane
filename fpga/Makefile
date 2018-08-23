@@ -6,6 +6,9 @@ ips:
 	make -C ips/xilinx_dcache_bank_data_256x128
 	make -C ips/xilinx_dcache_bank_tag_256x46
 	make -C ips/xilinx_clock_manager
+	make -C ips/xilinx_clock_manager_2
+	make -C ips/xilinx_axi_clock_converter
+	make -C ips/xilinx_system_reset
 	make -C ips/xilinx_mig7_ddr3
 
 synth: synth-kerbin

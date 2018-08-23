@@ -4,12 +4,12 @@
 ## - uncomment the lines corresponding to used pins
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
-##Clock signal
-set_property -dict {PACKAGE_PIN R2 IOSTANDARD LVCMOS15} [get_ports sys_clk_i]
-create_clock -period 10.000 -name sys_clk_pin -add [get_ports sys_clk_i]
-
 ##Reset Buttons
 set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS15} [get_ports sys_rst]
+
+## Clocks
+set_property PACKAGE_PIN K17 [get_ports sys_clk]
+create_clock -period 8.000 -name SYSTEM_CLOCK [get_ports sys_clk]
 
 ##Switches
 #set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; #IO_L19N_T3_VREF_35 Sch=sw[0]
@@ -196,17 +196,3 @@ set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS15} [get_ports sys_rst]
 #set_property PACKAGE_PIN W11 [get_ports {netic19_w11}]; #IO_L18P_T2_13
 #set_property PACKAGE_PIN W9 [get_ports {netic19_w9}]; #IO_L16N_T2_13
 #set_property PACKAGE_PIN Y9 [get_ports {netic19_y9}]; #IO_L14P_T2_SRCC_13
-
-
-
-set_property IOSTANDARD LVCMOS15 [get_ports ddr3_reset_n]
-set_property IOSTANDARD DIFF_SSTL15 [get_ports ddr3_sys_clk_p]
-set_property IOSTANDARD DIFF_SSTL15 [get_ports ddr3_ref_clk_p]
-
-set_property PACKAGE_PIN Y12 [get_ports ddr3_sys_clk_p]
-set_property PACKAGE_PIN Y13 [get_ports ddr3_sys_clk_n]
-set_property PACKAGE_PIN Y9 [get_ports ddr3_ref_clk_p]
-set_property PACKAGE_PIN Y8 [get_ports ddr3_ref_clk_n]
-
-set_property PACKAGE_PIN Y11 [get_ports ddr_areset_n]
-set_property IOSTANDARD LVCMOS15 [get_ports ddr_areset_n]
