@@ -48,8 +48,15 @@ update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
 
 # add constraints (timing and cdc)
+if { $::env(XILINX_BOARD) eq "digilentinc.com:zybo-z7-20:part0:1.0" } {
 add_files -fileset constrs_1 -norecurse tcl/zyboz7.xdc
 set_property target_constrs_file tcl/zyboz7.xdc [current_fileset -constrset]
+} elseif { $::env(XILINX_BOARD) eq "digilentinc.com:arty-s7-50:part0:1.0" } {
+    add_files -fileset constrs_1 -norecurse tcl/artys7.xdc
+    set_property target_constrs_file tcl/artys7.xdc [current_fileset -constrset]
+} else {
+    error "No supported board selected"
+}
 
 catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL }
 update_compile_order -fileset sources_1
