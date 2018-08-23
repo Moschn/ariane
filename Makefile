@@ -29,8 +29,7 @@ ariane_pkg := include/riscv_pkg.sv       \
 util := $(wildcard src/util/*.svh)         \
         src/util/instruction_tracer_pkg.sv \
         src/util/instruction_tracer_if.sv  \
-        src/util/cluster_clock_gating.sv   \
-		src/util/sram.sv
+        src/util/cluster_clock_gating.sv
         
 # Test packages
 test_pkg := $(wildcard tb/test/*/*sequence_pkg.sv*) \
@@ -51,7 +50,7 @@ src :=  $(filter-out src/ariane_regfile.sv, $(wildcard src/*.sv))      \
         src/fpga-support/rtl/SyncSpRamBeNx64.sv                        \
         src/common_cells/src/deprecated/generic_fifo.sv                \
         src/common_cells/src/deprecated/pulp_sync.sv                   \
-		src/common_cells/src/fifo_v2.sv                                \
+        src/common_cells/src/fifo.sv                                   \
         src/common_cells/src/lzc.sv                                    \
         src/common_cells/src/rrarbiter.sv                              \
         tb/ariane_testharness.sv                                       \
@@ -162,8 +161,7 @@ check-benchmarks:
 verilate_command := $(verilator)                                                           \
                     $(ariane_pkg)                                                          \
                     $(filter-out tb/ariane_bt.sv,$(src))                                   \
-                    src/util/sram.sv                                                       \
-					+incdir+src/axi_node                                                   \
+                    +incdir+src/axi_node                                                   \
                     --unroll-count 256                                                     \
                     -Werror-PINMISSING                                                     \
                     -Werror-IMPLICIT                                                       \
