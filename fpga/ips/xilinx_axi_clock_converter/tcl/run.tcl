@@ -1,12 +1,12 @@
 set partNumber $::env(XILINX_PART)
 set boardName  $::env(XILINX_BOARD)
 
-set ipName xilinx_clock_manager
+set ipName xilinx_axi_clock_converter
 
 create_project $ipName .  -force -part $partNumber
 set_property board_part $boardName [current_project]
 
-create_ip -name clk_wiz -vendor xilinx.com -library ip -module_name $ipName
+create_ip -name axi_clock_converter -vendor xilinx.com -library ip -version 2.1 -module_name $ipName
 
 # set_property -dict [list CONFIG.USE_DYN_RECONFIG {false} CONFIG.PRIM_IN_FREQ {200.00} CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {50.000} CONFIG.LOCKED_PORT {locked}] [get_ips xilinx_clock_manager]
 # set_property -dict [list CONFIG.CLKOUT2_USED {true} CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {50} CONFIG.CLKOUT2_DRIVES {BUFGCE} CONFIG.MMCM_DIVCLK_DIVIDE {1} CONFIG.MMCM_CLKOUT1_DIVIDE {20} CONFIG.NUM_OUT_CLKS {2} CONFIG.CLKOUT2_JITTER {151.636} CONFIG.CLKOUT2_PHASE_ERROR {98.575}] [get_ips xilinx_clock_manager]
@@ -15,9 +15,9 @@ create_ip -name clk_wiz -vendor xilinx.com -library ip -module_name $ipName
 
 
 if { $boardName eq "digilentinc.com:zybo-z7-20:part0:1.0" } {
-    set_property -dict [list CONFIG.CLK_IN1_BOARD_INTERFACE {Custom} CONFIG.CLKOUT2_USED {true} CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {166.667} CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {200} CONFIG.PRIM_IN_FREQ {125.000} CONFIG.CLKIN1_JITTER_PS {80.0} CONFIG.MMCM_DIVCLK_DIVIDE {1} CONFIG.MMCM_CLKFBOUT_MULT_F {8.000} CONFIG.MMCM_CLKIN1_PERIOD {8.000} CONFIG.MMCM_CLKOUT0_DIVIDE_F {6.000} CONFIG.MMCM_CLKOUT1_DIVIDE {5} CONFIG.NUM_OUT_CLKS {2} CONFIG.CLKOUT1_JITTER {113.052} CONFIG.CLKOUT1_PHASE_ERROR {96.948} CONFIG.CLKOUT2_JITTER {109.241} CONFIG.CLKOUT2_PHASE_ERROR {96.948}] [get_ips $ipName]
+    error "Not yet created"
 } elseif { $boardName eq "digilentinc.com:arty-s7-50:part0:1.0" } {
-    set_property -dict [list CONFIG.CLK_IN1_BOARD_INTERFACE {Custom} CONFIG.CLKOUT2_USED {true} CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {166.667} CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {200} CONFIG.PRIM_IN_FREQ {12.000} CONFIG.CLKIN1_JITTER_PS {833.33} CONFIG.MMCM_DIVCLK_DIVIDE {1} CONFIG.MMCM_CLKFBOUT_MULT_F {50.375} CONFIG.MMCM_CLKIN1_PERIOD {83.333} CONFIG.MMCM_CLKOUT0_DIVIDE_F {3.625} CONFIG.MMCM_CLKOUT1_DIVIDE {3} CONFIG.NUM_OUT_CLKS {2} CONFIG.CLKOUT1_JITTER {529.010} CONFIG.CLKOUT1_PHASE_ERROR {606.680} CONFIG.CLKOUT2_JITTER {516.435} CONFIG.CLKOUT2_PHASE_ERROR {606.680}] [get_ips $ipName]
+    set_property -dict [list CONFIG.Component_Name {axi_clock_converter} CONFIG.ADDR_WIDTH {64} CONFIG.DATA_WIDTH {64} CONFIG.ID_WIDTH {6} CONFIG.ACLK_ASYNC {1} CONFIG.SYNCHRONIZATION_STAGES {4}] [get_ips $ipName]
 } else {
     error "No supported board specified"
 }

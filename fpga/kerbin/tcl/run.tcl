@@ -19,7 +19,7 @@ source ../common/messages.tcl
 # source tcl/rtl_src_files.tcl
 
 add_files -norecurse -scan_for_includes ../../include
-add_files -norecurse -scan_for_includes ../rtl
+add_files -scan_for_includes ../rtl
 add_files -scan_for_includes ../../src
 
 # add IPs
@@ -32,6 +32,10 @@ read_ip ../ips/xilinx_dcache_bank_tag_256x46/ip/xilinx_dcache_bank_tag_256x46.xc
 # read_ip ../ips/xilinx_l2_mem_4096x64/ip/xilinx_l2_mem_4096x64.xci
 read_ip ../ips/xilinx_mig7_ddr3/ip/xilinx_mig7_ddr3.xci
 read_ip ../ips/xilinx_clock_manager/ip/xilinx_clock_manager.xci
+read_ip ../ips/xilinx_clock_manager_2/ip/xilinx_clock_manager_2.xci
+read_ip ../ips/xilinx_axi_clock_converter/ip/xilinx_axi_clock_converter.xci
+read_ip ../ips/xilinx_system_reset/ip/xilinx_system_reset.xci
+
 
 # synth_ip [get_ips xilinx_dcache_bank_data_256x128]
 # synth_ip [get_ips xilinx_dcache_bank_tag_256x46]
@@ -49,21 +53,30 @@ update_compile_order -fileset sim_1
 
 # add constraints (timing and cdc)
 if { $::env(XILINX_BOARD) eq "digilentinc.com:zybo-z7-20:part0:1.0" } {
-add_files -fileset constrs_1 -norecurse tcl/zyboz7.xdc
-set_property target_constrs_file tcl/zyboz7.xdc [current_fileset -constrset]
+    add_files -fileset constrs_1 -norecurse tcl/zyboz7.xdc
+    set_property target_constrs_file tcl/zyboz7.xdc [current_fileset -constrset]
+
+    set verilog_define "ZYBO"
 } elseif { $::env(XILINX_BOARD) eq "digilentinc.com:arty-s7-50:part0:1.0" } {
     add_files -fileset constrs_1 -norecurse tcl/artys7.xdc
     set_property target_constrs_file tcl/artys7.xdc [current_fileset -constrset]
+
+    set verilog_define "ARTY"
 } else {
     error "No supported board selected"
 }
 
-catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL }
+catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define }
 update_compile_order -fileset sources_1
-synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL
+synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define
 
 set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY none [get_runs synth_1]
 set_property STEPS.SYNTH_DESIGN.ARGS.GATED_CLOCK_CONVERSION on [get_runs synth_1]
+set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Default [get_runs impl_1]
+set_property STEPS.POST_PLACE_POWER_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Default [get_runs impl_1]
+set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
 
 launch_runs synth_1
 wait_on_run synth_1
@@ -89,26 +102,27 @@ report_clock_interaction                                                -file re
 
 # set for RuntimeOptimized implementation
 # set_property "steps.opt_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
-# set_property "steps.place_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
-# set_property "steps.route_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
+set_property "steps.place_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
+set_property "steps.route_design.args.directive" "RuntimeOptimized" [get_runs impl_1]
 
-# launch_runs impl_1
-# wait_on_run impl_1
-# launch_runs impl_1 -to_step write_bitstream
-# wait_on_run impl_1
-# open_run impl_1
+launch_runs impl_1
+wait_on_run impl_1
+launch_runs impl_1 -to_step write_bitstream
+wait_on_run impl_1
+open_run impl_1
 
-# # # output Verilog netlist + SDC for timing simulation
-# write_verilog -force -mode funcsim kerbin_funcsim.v
-# write_verilog -force -mode timesim kerbin_timesim.v
-# write_sdf     -force kerbin_timesim.sdf
+# # output Verilog netlist + SDC for timing simulation
+write_verilog -force -mode funcsim kerbin_funcsim.v
+write_verilog -force -mode timesim kerbin_timesim.v
+write_sdf     -force kerbin_timesim.sdf
 
-# # reports
-# exec mkdir -p reports/
-# exec rm -rf reports/*
-# check_timing                                                                                         -file reports/kerbin.check_timing.rpt
-# report_timing -max_paths 100 -nworst 100 -delay_type max -sort_by slack                              -file reports/kerbin.timing_WORST_100.rpt
-# report_timing -nworst 1 -delay_type max -sort_by group                                               -file reports/kerbin.timing.rpt
-# report_utilization -hierarchical                                                                     -file reports/kerbin.utilization.rpt
-
-
+# reports
+exec mkdir -p reports/
+exec rm -rf reports/*
+check_timing                                                            -file reports/kerbin.check_timing.rpt
+report_timing -max_paths 100 -nworst 100 -delay_type max -sort_by slack -file reports/kerbin.timing_WORST_100.rpt
+report_timing -nworst 1 -delay_type max -sort_by group                  -file reports/kerbin.timing.rpt
+report_utilization -hierarchical                                        -file reports/kerbin.utilization_hierarchical.rpt
+report_utilization                                                      -file reports/kerbin.utilization_total.rpt
+report_cdc                                                              -file reports/kerbin.cdc.rpt
+report_clock_interaction                                                -file reports/kerbin.clock_interaction.rpt
