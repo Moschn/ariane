@@ -300,11 +300,6 @@ module kerbin (
         // Application interface ports
         .ui_clk                ( ui_clk              ),  // output			ui_clk
         .ui_clk_sync_rst       ( ui_clk_sync_rst     ),  // output			ui_clk_sync_rst
-        .ui_addn_clk_0         (                     ),  // output			ui_addn_clk_0
-        .ui_addn_clk_1         (                     ),  // output			ui_addn_clk_1
-        .ui_addn_clk_2         (                     ),  // output			ui_addn_clk_2
-        .ui_addn_clk_3         (                     ),  // output			ui_addn_clk_3
-        .ui_addn_clk_4         (                     ),  // output			ui_addn_clk_4
         .mmcm_locked           (                     ),  // output			mmcm_locked
         .aresetn               ( ddr_aresetn         ),  // input			aresetn
         .app_sr_req            ( 1'b0                ),  // input			app_sr_req
