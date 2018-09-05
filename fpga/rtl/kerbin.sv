@@ -17,8 +17,8 @@ import kerbin_pkg::*;
 
 module kerbin (
     // System Ports
-    input  logic               sys_rst_i,
-    input  logic               sys_clk_i,
+    input  logic               board_rst_i,
+    input  logic               board_clk_i,
     // DDR 3
     input  logic               ddr_aresetn,
     inout  logic [15:0]        ddr3_dq,
@@ -67,10 +67,10 @@ module kerbin (
         .clk_out1    ( ddr3_sys_clk    ), // output clk_out1
         .clk_out2    ( ddr3_ref_clk    ), // output clk_out2
         // Status and control signals
-        .reset       ( sys_rst_i       ), // input reset
+        .reset       ( board_rst_i     ), // input reset
         .locked      (                 ), // output locked
         // Clock in ports
-        .clk_in1     ( sys_clk_i       )  // input clk_in1
+        .clk_in1     ( board_clk_i     )  // input clk_in1
     );
 
     // Clk Manager 2
@@ -354,7 +354,7 @@ module kerbin (
         .sys_clk_i             ( ddr3_sys_clk              ),  // input			sys_clk_i
         // Reference Clock Ports
         .clk_ref_i             ( ddr3_ref_clk              ),  // input				clk_ref_i
-        .sys_rst               ( sys_rst_i                 ) // input sys_rst
+        .sys_rst               ( board_rst_i               ) // input sys_rst
     );
     
     

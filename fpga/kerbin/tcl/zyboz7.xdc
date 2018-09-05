@@ -5,11 +5,11 @@
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
 ##Reset Buttons
-set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS15} [get_ports sys_rst]
+set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS15} [get_ports board_rst_i]
 
 ## Clocks
-set_property PACKAGE_PIN K17 [get_ports sys_clk]
-create_clock -period 8.000 -name SYSTEM_CLOCK [get_ports sys_clk]
+set_property -dict {PACKAGE_PIN K17 IOSTANDARD LVCMOS15} [get_ports board_clk_i]
+create_clock -period 8.000 -name SYSTEM_CLOCK [get_ports board_clk_i]
 
 ##Switches
 #set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; #IO_L19N_T3_VREF_35 Sch=sw[0]

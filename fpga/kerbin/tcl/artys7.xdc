@@ -1,11 +1,11 @@
-set_property PACKAGE_PIN F14 [get_ports sys_clk_i]
-create_clock -period 83.333 -name SYSTEM_CLOCK [get_ports sys_clk_i]
+set_property PACKAGE_PIN F14 [get_ports board_clk_i]
+create_clock -period 83.333 -name SYSTEM_CLOCK [get_ports board_clk_i]
 
-set_property PACKAGE_PIN A2 [get_ports sys_rst_i]
+set_property PACKAGE_PIN A2 [get_ports board_rst_i]
 set_property PACKAGE_PIN A3 [get_ports ddr_aresetn]
-set_property IOSTANDARD LVCMOS18 [get_ports sys_rst_i]
+set_property IOSTANDARD LVCMOS18 [get_ports board_rst_i]
 set_property IOSTANDARD LVCMOS18 [get_ports ddr_aresetn]
-set_property IOSTANDARD LVCMOS18 [get_ports sys_clk_i]
+set_property IOSTANDARD LVCMOS18 [get_ports board_clk_i]
 
 ### arty S7 specific settings
 

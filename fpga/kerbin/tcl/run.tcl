@@ -66,9 +66,9 @@ if { $::env(XILINX_BOARD) eq "digilentinc.com:zybo-z7-20:part0:1.0" } {
     error "No supported board selected"
 }
 
-catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define }
+catch { synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define -verilog_define FPGA_TARGET_XILINX }
 update_compile_order -fileset sources_1
-synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define
+synth_design -retiming -rtl -name rtl_1 -verilog_define SYNTHESIS -verilog_define PULP_FPGA_EMUL -verilog_define $verilog_define -verilog_define FPGA_TARGET_XILINX
 
 set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY none [get_runs synth_1]
 set_property STEPS.SYNTH_DESIGN.ARGS.GATED_CLOCK_CONVERSION on [get_runs synth_1]
