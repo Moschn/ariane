@@ -229,7 +229,7 @@ src :=  $(filter-out core/ariane_regfile.sv, $(wildcard core/*.sv))             
         corev_apu/src/tech_cells_generic/src/deprecated/cluster_clk_cells.sv         \
         corev_apu/src/tech_cells_generic/src/deprecated/pulp_clk_cells.sv            \
         common/local/util/tc_sram_wrapper.sv                                         \
-        corev_apu/src/tech_cells_generic/src/rtl/tc_sram.sv                          \
+		corev_apu/src/tech_cells_generic/src/rtl/tc_sram.sv							 \
         corev_apu/src/tech_cells_generic/src/rtl/tc_clk.sv                           \
         corev_apu/tb/ariane_testharness.sv                                           \
         corev_apu/tb/ariane_peripherals.sv                                           \
@@ -583,6 +583,7 @@ xrun-ci: xrun-asm-tests xrun-amo-tests xrun-mul-tests xrun-fp-tests xrun-benchma
 
 # verilator-specific
 verilate_command := $(verilator)                                                                                 \
+					corev_apu/tb/verilator.vlt 										 							 \
                     $(filter-out %.vhd, $(ariane_pkg))                                                           \
                     $(filter-out core/fpu_wrap.sv, $(filter-out %.vhd, $(src)))                                  \
                     $(copro_src)                                                                                 \
@@ -611,7 +612,7 @@ verilate_command := $(verilator)                                                
                     -Wall --cc  --vpi                                                                            \
                     $(list_incdir) --top-module ariane_testharness                                               \
 					--threads-dpi none 																			 \
-                    --Mdir $(ver-library) -O3                                                                    \
+                    --Mdir $(ver-library) -O3 																	 \
                     --exe corev_apu/tb/ariane_tb.cpp corev_apu/tb/dpi/SimDTM.cc corev_apu/tb/dpi/SimJTAG.cc      \
                     corev_apu/tb/dpi/remote_bitbang.cc corev_apu/tb/dpi/msim_helper.cc $(if $(DROMAJO), corev_apu/tb/dpi/dromajo_cosim_dpi.cc,)
 
