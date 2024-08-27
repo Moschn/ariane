@@ -57,7 +57,7 @@ jobs:
       SPIKE_TANDEM: 1
     strategy:
       matrix:
-        testcase:  [ cv64a6_imafdc_tests ]
+        testcase:  [ cv64a6_imafdc_tests, benchmark ]
         config:    [ cv64a6_imafdc_sv39_hpdcache, cv64a6_imafdc_sv39_wb, cv64a6_imafdc_sv39 ]
         simulator: [ veri-testharness ]
         include:
@@ -122,7 +122,7 @@ jobs:
       SPIKE_TANDEM: 1
     strategy:
       matrix:
-        testcase:  [ dv-riscv-arch-test, cv32a6_tests ]
+        testcase:  [ dv-riscv-arch-test, cv32a6_tests, benchmark ]
         config:    [ cv32a65x ]
         simulator: [ veri-testharness ]
     needs:
